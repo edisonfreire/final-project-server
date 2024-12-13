@@ -63,7 +63,19 @@ const configureApp = async () => {
   app.use((err, req, res, next) => {
     console.error(err);
     console.log(req.originalUrl);
-    res.status(err.status || 500).send(err.message || "Internal server error.");  // Status code 500 Internal Server Error - server error
+    if (err.name === "SequelizeValidationError") {
+      // Handle Sequelize validation errors
+      res.status(400).json({
+        errors: err.errors.map((error) => ({
+          field: error.path, // Field that caused the error
+          message: error.message, // Human-readable validation message
+        })),
+      });
+    } else {
+      res
+        .status(err.status || 500)
+        .send(err.message || "Internal server error.");
+    }
   });
 };
 
